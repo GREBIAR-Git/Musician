@@ -1,1 +1,1 @@
-# DiscordBot
+# Музыкальный бот для Discord
