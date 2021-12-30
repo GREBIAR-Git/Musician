@@ -9,47 +9,57 @@ namespace Musician
     {
         public static async Task<IAudioClient?> Connect(DiscordSocketClient bot, SocketMessage message)
         {
-            IVoiceChannel? voice = GetVoiceC(bot, message);
-            if (voice == null)
-            {
-                await message.Channel.SendMessageAsync("Не хочу заходить один =(");
-                return null;
-            }
-            await message.Channel.SendMessageAsync("Захожу в канал - " + voice.Name);
-            return await voice.ConnectAsync(true, false, true);
-        }
-
-        public static async Task<Task?> Disconnect(DiscordSocketClient bot,SocketMessage message)
-        {
-            IVoiceChannel? voice = GetVoiceD(bot, message);
-            if (voice == null)
-            {
-                await message.Channel.SendMessageAsync("Я же ещё не зашёл =(");
-                return null;
-            }
-            await message.Channel.SendMessageAsync("Выхожу из канала - " + voice.Name);
-            return voice.DisconnectAsync();
-        }
-
-        static IVoiceChannel? GetVoiceC(DiscordSocketClient bot, SocketMessage arg)
-        {
-            SocketUserMessage? message = arg as SocketUserMessage;
-            SocketCommandContext ctx = new SocketCommandContext(bot, message);
-            SocketGuildUser? user = ctx.User as SocketGuildUser;
+            SocketUserMessage? userMessage = message as SocketUserMessage;
+            SocketCommandContext context = new SocketCommandContext(bot, userMessage);
+            SocketGuildUser? user = context.User as SocketGuildUser;
             if (user != null)
             {
-                return user.VoiceChannel;
+                IUser clientUser = await context.Channel.GetUserAsync(context.Client.CurrentUser.Id);
+                if (clientUser is IGuildUser bot1)
+                {
+                    if (bot1.VoiceChannel != null)
+                    {
+                        await userMessage.Channel.SendMessageAsync("Я же уже зашёл в - " + userMessage.Channel.Name);
+                    }
+                    else
+                    {
+                        IVoiceChannel voice = user.VoiceChannel;
+                        if (voice == null)
+                        {
+                            await message.Channel.SendMessageAsync("Не хочу заходить без тебя =(");
+                        }
+                        else if (voice.GetUserAsync(bot.CurrentUser.Id)!=null)
+                        {
+                            await message.Channel.SendMessageAsync("Захожу в канал - " + voice.Name);
+                            return await voice.ConnectAsync(true, false, true);
+                        }
+                    }
+                }
             }
             return null;
         }
 
-        //нет пока инфы как получить чат бота        
-        static IVoiceChannel? GetVoiceD(DiscordSocketClient bot, SocketMessage arg)
+        public static async Task<Task?> Disconnect(DiscordSocketClient bot,SocketMessage message)
         {
-            SocketUserMessage? message = arg as SocketUserMessage;
-            SocketCommandContext ctx = new SocketCommandContext(bot, message);
-
-            SocketGuildUser? user = ctx.User as SocketGuildUser;
+            SocketUserMessage? userMessage = message as SocketUserMessage;
+            SocketCommandContext context = new SocketCommandContext(bot, userMessage);
+            SocketGuildUser? user = context.User as SocketGuildUser;
+            if (user != null)
+            {
+                IUser clientUser = await context.Channel.GetUserAsync(context.Client.CurrentUser.Id);
+                if (clientUser is IGuildUser bot1)
+                {
+                    if (bot1.VoiceChannel == null)
+                    {
+                        await userMessage.Channel.SendMessageAsync("Я же ещё не зашёл =(");
+                    }
+                    else
+                    {
+                        await message.Channel.SendMessageAsync("Выхожу из канала - " + bot1.VoiceChannel.Name);
+                        return bot1.VoiceChannel.DisconnectAsync();
+                    }
+                }
+            }
             return null;
         }
     }
