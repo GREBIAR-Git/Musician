@@ -8,7 +8,7 @@ namespace Musician
     {
         readonly DiscordSocketClient bot = new DiscordSocketClient();
 
-        readonly string token = "OTI1Nzc2MDg2MDg2ODUyNjQ4.YcyCKw.AF67uyMIZ02bVz7twZCJ23PH4DY";
+        readonly string token = "";
 
         public async Task Initialization()
         {
@@ -26,7 +26,7 @@ namespace Musician
             {
                 //bot.CurrentUser.Username
             }
-            await bot.SetGameAsync("!help",null,ActivityType.Watching);
+            await bot.SetGameAsync("!help", null, ActivityType.Watching);
             return Task.CompletedTask;
         }
 
@@ -42,13 +42,13 @@ namespace Musician
             {
                 if (Command.IsCommand(message.Content))
                 {
-                    string command = message.Content.Substring(1).ToLower();
-                    if (Command.FindCommand(Command.help,ref command))
+                    string command = message.Content.Substring(1);
+                    if (Command.FindCommand(Command.help, ref command))
                     {
                         await message.Channel.SendMessageAsync("Список команд");
                         await message.Channel.SendMessageAsync(Command.Help());
                     }
-                    else if (Command.FindCommand(Command.play,ref command))
+                    else if (Command.FindCommand(Command.play, ref command))
                     {
 
                         IAudioClient audioClient = await Bot.Connect(bot, message);
@@ -58,11 +58,11 @@ namespace Musician
                             await bot.SetGameAsync("раюотаю", null, ActivityType.Listening);
                         }
                     }
-                    else if (Command.FindCommand(Command.connect,ref command))
+                    else if (Command.FindCommand(Command.connect, ref command))
                     {
                         await Bot.Connect(bot, message);
                     }
-                    else if (Command.FindCommand(Command.disconnect,ref command))
+                    else if (Command.FindCommand(Command.disconnect, ref command))
                     {
                         await Bot.Disconnect(bot, message);
                     }

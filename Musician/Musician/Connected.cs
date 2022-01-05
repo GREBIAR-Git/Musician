@@ -9,10 +9,10 @@ namespace Musician
     {
         public static async Task<IAudioClient?> Connect(DiscordSocketClient bot, SocketMessage message)
         {
-            if(message is SocketUserMessage userMessage)
+            if (message is SocketUserMessage userMessage)
             {
                 SocketCommandContext context = new SocketCommandContext(bot, userMessage);
-                if(context.User is SocketGuildUser user)
+                if (context.User is SocketGuildUser user)
                 {
                     if (user != null)
                     {
@@ -20,9 +20,9 @@ namespace Musician
                         if (clientUser is IGuildUser bot1)
                         {
                             IVoiceChannel voice = user.VoiceChannel;
-                            if (bot1.VoiceChannel != null)
+                            if (bot1.VoiceChannel == voice)
                             {
-                                await userMessage.Channel.SendMessageAsync("Я же уже зашёл в - " + voice.Name);
+                                await userMessage.Channel.SendMessageAsync("Я же уже зашёл в «" + voice.Name + "»");
                             }
                             else
                             {
@@ -33,7 +33,7 @@ namespace Musician
                                 else if (voice.GetUserAsync(bot.CurrentUser.Id) != null)
                                 {
                                     await voice.ConnectAsync(true, false, true);
-                                    await message.Channel.SendMessageAsync("Захожу в канал - " + voice.Name);
+                                    await message.Channel.SendMessageAsync("Захожу в канал «" + voice.Name + "»");
                                 }
                             }
                         }
@@ -61,7 +61,7 @@ namespace Musician
                             }
                             else
                             {
-                                await message.Channel.SendMessageAsync("Выхожу из канала - " + bot1.VoiceChannel.Name);
+                                await message.Channel.SendMessageAsync("Выхожу из канала «" + bot1.VoiceChannel.Name + "»");
                                 return bot1.VoiceChannel.DisconnectAsync();
                             }
                         }
