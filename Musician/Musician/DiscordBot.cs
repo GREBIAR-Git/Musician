@@ -8,7 +8,7 @@ namespace Musician
     {
         readonly DiscordSocketClient bot = new DiscordSocketClient();
 
-        readonly string token = "";
+        readonly string token = "OTI1Nzc2MDg2MDg2ODUyNjQ4.YcyCKw.IHvaxPThWBav02XfCHMMak2g_To";
 
         public async Task Initialization()
         {
@@ -45,18 +45,20 @@ namespace Musician
                     string command = message.Content.Substring(1);
                     if (Command.FindCommand(Command.help, ref command))
                     {
-                        await message.Channel.SendMessageAsync("Список команд");
-                        await message.Channel.SendMessageAsync(Command.Help());
+                        await message.Channel.SendMessageAsync("",false, Banner("Список команд", Command.Help()));
                     }
                     else if (Command.FindCommand(Command.play, ref command))
                     {
 
                         IAudioClient audioClient = await Bot.Connect(bot, message);
-                        await bot.SetGameAsync(command, null, ActivityType.Listening);
                         if (audioClient != null)
                         {
-                            await bot.SetGameAsync("раюотаю", null, ActivityType.Listening);
+                            await bot.SetGameAsync(command, null, ActivityType.Listening);
                         }
+                    }
+                    else if(Command.FindCommand(Command.stop, ref command))
+                    {
+                        //Остановить проигрывание
                     }
                     else if (Command.FindCommand(Command.connect, ref command))
                     {
@@ -66,13 +68,43 @@ namespace Musician
                     {
                         await Bot.Disconnect(bot, message);
                     }
+                    else if(Command.FindCommand(Command.clear, ref command))
+                    {
+                        if(int.TryParse(command,out int number))
+                        {
+                            IEnumerable<IMessage> messages = await message.Channel.GetMessagesAsync(number).FlattenAsync();
+                            await ((ITextChannel)message.Channel).DeleteMessagesAsync(messages);
+                            return Task.CompletedTask;
+                        }
+                        else
+                        {
+                            await message.Channel.SendMessageAsync("", false, Banner("Пример команды","!clear 10"));
+                        }
+                    }
                     else
                     {
-                        await message.Channel.SendMessageAsync("Напиши !help");
+                        await message.Channel.SendMessageAsync("",false, Banner("Напиши !help"));
                     }
                 }
+                await message.DeleteAsync();
             }
             return Task.CompletedTask;
+        }
+        public static Discord.Embed Banner(string title, string description)
+        {
+            Discord.EmbedBuilder builder = new Discord.EmbedBuilder();
+            builder.Title = title;
+            builder.Description = description;
+            builder.Color = Discord.Color.Blue;
+            return builder.Build();
+        }
+
+        public static Discord.Embed Banner(string title)
+        {
+            Discord.EmbedBuilder builder = new Discord.EmbedBuilder();
+            builder.Title = title;
+            builder.Color = Discord.Color.Blue;
+            return builder.Build();
         }
     }
 }

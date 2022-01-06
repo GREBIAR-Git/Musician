@@ -22,18 +22,18 @@ namespace Musician
                             IVoiceChannel voice = user.VoiceChannel;
                             if (bot1.VoiceChannel == voice)
                             {
-                                await userMessage.Channel.SendMessageAsync("Я же уже зашёл в «" + voice.Name + "»");
+                                await userMessage.Channel.SendMessageAsync("",false, DiscordBot.Banner("Я же уже зашёл в «" + voice.Name + "»"));
                             }
                             else
                             {
                                 if (voice == null)
                                 {
-                                    await message.Channel.SendMessageAsync("Не хочу заходить без тебя =(");
+                                    await message.Channel.SendMessageAsync("", false, DiscordBot.Banner("Не хочу заходить без тебя =("));
                                 }
                                 else if (voice.GetUserAsync(bot.CurrentUser.Id) != null)
                                 {
                                     await voice.ConnectAsync(true, false, true);
-                                    await message.Channel.SendMessageAsync("Захожу в канал «" + voice.Name + "»");
+                                    await message.Channel.SendMessageAsync("", false, DiscordBot.Banner("Захожу в канал «" + voice.Name + "»"));
                                 }
                             }
                         }
@@ -57,11 +57,11 @@ namespace Musician
                         {
                             if (bot1.VoiceChannel == null)
                             {
-                                await userMessage.Channel.SendMessageAsync("Я же ещё не зашёл =(");
+                                await userMessage.Channel.SendMessageAsync("", false, DiscordBot.Banner("Я же ещё не зашёл =("));
                             }
                             else
                             {
-                                await message.Channel.SendMessageAsync("Выхожу из канала «" + bot1.VoiceChannel.Name + "»");
+                                await message.Channel.SendMessageAsync("", false, DiscordBot.Banner("Выхожу из канала «" + bot1.VoiceChannel.Name + "»"));
                                 return bot1.VoiceChannel.DisconnectAsync();
                             }
                         }

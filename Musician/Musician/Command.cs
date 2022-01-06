@@ -8,6 +8,7 @@
         public readonly static string[] stop = new string[] { "stop", "остановить", "стоп" };
         public readonly static string[] connect = new string[] { "connect", "join", "присоединиться", "зайти" };
         public readonly static string[] disconnect = new string[] { "disconnect", "leave", "выйти", "покинуть" };
+        public readonly static string[] clear = new string[] { "clear", "удаить", };
 
         public static bool IsCommand(string message)
         {
@@ -34,8 +35,10 @@
         {
             return OneCommand("help", help) + "\n" +
                 OneCommand("play", play) + "\n" +
+                OneCommand("stop", stop) + "\n" +
                 OneCommand("connect", connect) + "\n" +
-                OneCommand("disconnect", disconnect);
+                OneCommand("disconnect", disconnect) + "\n" +
+                OneCommand("clear", clear);
         }
 
         static string OneCommand(string name, string[] commands)
