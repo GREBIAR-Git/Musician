@@ -8,7 +8,7 @@ namespace Musician
     {
         readonly DiscordSocketClient bot = new DiscordSocketClient();
 
-        readonly string token = "OTI1Nzc2MDg2MDg2ODUyNjQ4.YcyCKw.IHvaxPThWBav02XfCHMMak2g_To";
+        readonly string token = "";
 
         public async Task Initialization()
         {
@@ -49,10 +49,10 @@ namespace Musician
                     }
                     else if (Command.FindCommand(Command.play, ref command))
                     {
-
                         IAudioClient audioClient = await Bot.Connect(bot, message);
                         if (audioClient != null)
                         {
+                            await message.Channel.SendMessageAsync("", false, Banner("Композиция", command));
                             await bot.SetGameAsync(command, null, ActivityType.Listening);
                         }
                     }
@@ -72,8 +72,7 @@ namespace Musician
                     {
                         if(int.TryParse(command,out int number))
                         {
-                            IEnumerable<IMessage> messages = await message.Channel.GetMessagesAsync(number).FlattenAsync();
-                            await ((ITextChannel)message.Channel).DeleteMessagesAsync(messages);
+                            await DeleteMessages(message, number);
                             return Task.CompletedTask;
                         }
                         else
@@ -85,11 +84,18 @@ namespace Musician
                     {
                         await message.Channel.SendMessageAsync("",false, Banner("Напиши !help"));
                     }
+                    await message.DeleteAsync();
                 }
-                await message.DeleteAsync();
             }
             return Task.CompletedTask;
         }
+
+        async Task DeleteMessages(SocketMessage message, int number)
+        {
+            IEnumerable<IMessage> messages = await message.Channel.GetMessagesAsync(number + 1).FlattenAsync();
+            await((ITextChannel)message.Channel).DeleteMessagesAsync(messages);
+        }
+
         public static Discord.Embed Banner(string title, string description)
         {
             Discord.EmbedBuilder builder = new Discord.EmbedBuilder();

@@ -22,7 +22,7 @@ namespace Musician
                             IVoiceChannel voice = user.VoiceChannel;
                             if (bot1.VoiceChannel == voice)
                             {
-                                await userMessage.Channel.SendMessageAsync("",false, DiscordBot.Banner("Я же уже зашёл в «" + voice.Name + "»"));
+                                await userMessage.Channel.SendMessageAsync("", false, DiscordBot.Banner("Я же уже зашёл в «" + voice.Name + "»"));
                             }
                             else
                             {
@@ -32,8 +32,8 @@ namespace Musician
                                 }
                                 else if (voice.GetUserAsync(bot.CurrentUser.Id) != null)
                                 {
-                                    await voice.ConnectAsync(true, false, true);
                                     await message.Channel.SendMessageAsync("", false, DiscordBot.Banner("Захожу в канал «" + voice.Name + "»"));
+                                    return await voice.ConnectAsync();
                                 }
                             }
                         }
