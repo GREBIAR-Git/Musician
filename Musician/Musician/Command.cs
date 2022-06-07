@@ -1,50 +1,34 @@
 ﻿namespace Musician
 {
-    internal class Command
+    class Command
     {
-        readonly static char prefix = '!';
-        public readonly static string[] help = new string[] { "help", "помощь" };
-        public readonly static string[] play = new string[] { "play", "играть", "проиграть" };
-        public readonly static string[] stop = new string[] { "stop", "остановить", "стоп" };
-        public readonly static string[] connect = new string[] { "connect", "join", "присоединиться", "зайти" };
-        public readonly static string[] disconnect = new string[] { "disconnect", "leave", "выйти", "покинуть" };
-        public readonly static string[] clear = new string[] { "clear", "удаить", };
-
-        public static bool IsCommand(string message)
+        public string? MainName()
         {
-            if (message.Length > 0 && message[0] == prefix)
+            if (names.Length > 0)
             {
-                return true;
+                return names[0];
             }
-            return false;
-        }
-
-        public static bool FindCommand(string[] typeСommand, ref string command)
-        {
-            string[] elems = command.Split(' ');
-            string prefix = elems[0].ToLower();
-            if (typeСommand.Contains(prefix))
+            else
             {
-                command = String.Join(" ", elems, 1, elems.Length - 1);
-                return true;
+                return null;
             }
-            return false;
         }
 
-        public static string Help()
+        public string[] AllCommans()
         {
-            return OneCommand("help", help) + "\n" +
-                OneCommand("play", play) + "\n" +
-                OneCommand("stop", stop) + "\n" +
-                OneCommand("connect", connect) + "\n" +
-                OneCommand("disconnect", disconnect) + "\n" +
-                OneCommand("clear", clear);
+            return names;
         }
 
-        static string OneCommand(string name, string[] commands)
+        public bool Contains(string name)
         {
-            return name + " - " + prefix + String.Join(" " + prefix, commands);
+            return names.Contains(name);
         }
 
+        readonly string[] names;
+
+        public Command(params string[] names)
+        {
+            this.names = names;
+        }
     }
 }

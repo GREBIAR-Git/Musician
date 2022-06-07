@@ -5,13 +5,13 @@ using Discord.WebSocket;
 
 namespace Musician
 {
-    internal class Bot
+    internal class Connected
     {
-        public static async Task<IAudioClient?> Connect(DiscordSocketClient bot, SocketMessage message)
+        public static async Task<IAudioClient?> Connect(DiscordSocketClient bot, SocketUserMessage message)
         {
             if (message is SocketUserMessage userMessage)
             {
-                SocketCommandContext context = new SocketCommandContext(bot, userMessage);
+                SocketCommandContext context = new(bot, userMessage);
                 if (context.User is SocketGuildUser user)
                 {
                     if (user != null)
@@ -20,20 +20,22 @@ namespace Musician
                         if (clientUser is IGuildUser bot1)
                         {
                             IVoiceChannel voice = user.VoiceChannel;
-                            if (bot1.VoiceChannel == voice)
+                            if (bot1.VoiceChannel == voice && voice != null)
                             {
-                                await userMessage.Channel.SendMessageAsync("", false, DiscordBot.Banner("Я же уже зашёл в «" + voice.Name + "»"));
+                                await userMessage.Channel.SendMessageAsync("", false, Banner.Show("Я же уже зашёл в «" + voice.Name + "»"));
+                                return await voice.ConnectAsync(true, false, false);
                             }
                             else
                             {
                                 if (voice == null)
                                 {
-                                    await message.Channel.SendMessageAsync("", false, DiscordBot.Banner("Не хочу заходить без тебя =("));
+                                    await message.Channel.SendMessageAsync("", false, Banner.Show("Не хочу заходить без тебя =("));
                                 }
                                 else if (voice.GetUserAsync(bot.CurrentUser.Id) != null)
                                 {
-                                    await message.Channel.SendMessageAsync("", false, DiscordBot.Banner("Захожу в канал «" + voice.Name + "»"));
-                                    return await voice.ConnectAsync();
+
+                                    await message.Channel.SendMessageAsync("", false, Banner.Show("Захожу в канал «" + voice.Name + "»"));
+                                    return await voice.ConnectAsync(true, false, false);
                                 }
                             }
                         }
@@ -43,11 +45,11 @@ namespace Musician
             return null;
         }
 
-        public static async Task<Task> Disconnect(DiscordSocketClient bot, SocketMessage message)
+        public static async Task Disconnect(DiscordSocketClient bot, SocketUserMessage message)
         {
             if (message is SocketUserMessage userMessage)
             {
-                SocketCommandContext context = new SocketCommandContext(bot, userMessage);
+                SocketCommandContext context = new(bot, userMessage);
                 if (context.User is SocketGuildUser user)
                 {
                     if (user != null)
@@ -57,18 +59,17 @@ namespace Musician
                         {
                             if (bot1.VoiceChannel == null)
                             {
-                                await userMessage.Channel.SendMessageAsync("", false, DiscordBot.Banner("Я же ещё не зашёл =("));
+                                await userMessage.Channel.SendMessageAsync("", false, Banner.Show("Я же ещё не зашёл =("));
                             }
                             else
                             {
-                                await message.Channel.SendMessageAsync("", false, DiscordBot.Banner("Выхожу из канала «" + bot1.VoiceChannel.Name + "»"));
-                                return bot1.VoiceChannel.DisconnectAsync();
+                                await message.Channel.SendMessageAsync("", false, Banner.Show("Выхожу из канала «" + bot1.VoiceChannel.Name + "»"));
+                                await bot1.VoiceChannel.DisconnectAsync();
                             }
                         }
                     }
                 }
             }
-            return Task.CompletedTask;
         }
     }
 }
