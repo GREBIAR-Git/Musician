@@ -1,7 +1,28 @@
-﻿namespace Musician
+﻿using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Musician.Services;
+
+var discordSocketConfig = new DiscordSocketConfig()
 {
-    public class Program
+    GatewayIntents = GatewayIntents.All & ~GatewayIntents.GuildPresences & ~GatewayIntents.GuildScheduledEvents & ~GatewayIntents.GuildInvites
+};
+
+using IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureAppConfiguration(config =>
     {
-        public static async Task Main(string[] args) => await new DiscordBot().Initialization();
-    }
-}
+        config.AddYamlFile("_config.yml", false);
+    })
+    .ConfigureServices(services =>
+    {
+        services.AddSingleton(new DiscordSocketClient(discordSocketConfig));
+        services.AddSingleton<InteractionService>();
+        services.AddHostedService<InteractionHandlingService>();
+        services.AddHostedService<DiscordStartupService>();
+    })
+    .Build();
+
+await host.RunAsync();
