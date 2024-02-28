@@ -1,5 +1,6 @@
 ﻿using Discord.Audio;
 using YoutubeExplode;
+using YoutubeExplode.Common;
 using YoutubeExplode.Videos.Streams;
 
 namespace Musician.Audio;
@@ -37,9 +38,13 @@ public class Channel(IAudioClient audioClient)
 
     public List<YoutubeInfo> Queue { get; set; } = [];
 
-    public async Task AddAudioInQueue(string url)
+    public async Task AddAudioInQueue(string request)
     {
         var youtube = new YoutubeClient();
+
+        var videos = await youtube.Search.GetVideosAsync(request);
+
+        string url = videos[0].Url;
 
         var video = await youtube.Videos.GetAsync(url);
 

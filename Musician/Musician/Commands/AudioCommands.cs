@@ -80,21 +80,25 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
     }
 
 
-    [SlashCommand("play", "Проигрывает композицию по ссылке с youtude")]
-    public async Task Play(string queue)
+    [SlashCommand("play", "Проигрывает композицию по запросу")]
+    public async Task Play([Summary("queue"), Autocomplete(typeof(YouTubeAutocompleteHandler))] string queue)
     {
         await DeferAsync();
-        if (Context.User is IGuildUser guildUser)
+        if (OnVoiceChannel(out IVoiceChannel voiceChannel))
         {
-            if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
+            if (AudioClient.channels.TryGetValue(voiceChannel.Id, out Channel channel))
             {
                 await Play(channel, queue);
             }
             else
             {
-                channel = await AudioClient.Connect(guildUser.VoiceChannel);
+                channel = await AudioClient.Connect(voiceChannel);
                 await Play(channel, queue);
             }
+        }
+        else
+        {
+            await FollowupAsync(embed: Banner.Show("Вы не в канале"));
         }
     }
 
@@ -102,13 +106,17 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
     public async Task Pause()
     {
         await DeferAsync();
-        if (Context.User is IGuildUser guildUser)
+        if (OnVoiceChannel(out IVoiceChannel voiceChannel))
         {
-            if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
+            if (AudioClient.channels.TryGetValue(voiceChannel.Id, out Channel channel))
             {
                 await FollowupAsync(embed: Banner.Show("Композиция остановлена"));
                 channel.Pause();
             }
+        }
+        else
+        {
+            await FollowupAsync(embed: Banner.Show("Вы не в канале"));
         }
     }
 
@@ -117,34 +125,43 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
     public async Task Resume()
     {
         await DeferAsync();
-        if (Context.User is IGuildUser guildUser)
+        if (OnVoiceChannel(out IVoiceChannel voiceChannel))
         {
-            if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
+            if (AudioClient.channels.TryGetValue(voiceChannel.Id, out Channel channel))
             {
                 channel.Resume();
                 await FollowupAsync(embed: Banner.Show("Композиция продолжена"));
                 await Play(channel);
             }
         }
+        else
+        {
+            await FollowupAsync(embed: Banner.Show("Вы не в канале"));
+        }
     }
 
     [SlashCommand("stopall", "Удаляет все композиции из очереди и останавливает текущую")]
     public async Task StopAll()
     {
-        if (Context.User is IGuildUser guildUser)
+        await DeferAsync();
+        if (OnVoiceChannel(out IVoiceChannel voiceChannel))
         {
-            if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
+            if (AudioClient.channels.TryGetValue(voiceChannel.Id, out Channel channel))
             {
                 if (channel.Queue.Count > 0)
                 {
-                    await RespondAsync(embed: Banner.Show("Было пропущено " + channel.Queue.Count + " треков"));
+                    await FollowupAsync(embed: Banner.Show("Было пропущено " + channel.Queue.Count + " треков"));
                     channel.AllStop();
                 }
                 else
                 {
-                    await RespondAsync(embed: Banner.Show("Итак же ничего не играло :("));
+                    await FollowupAsync(embed: Banner.Show("Итак же ничего не играло :("));
                 }
             }
+        }
+        else
+        {
+            await FollowupAsync(embed: Banner.Show("Вы не в канале"));
         }
     }
 
@@ -159,9 +176,9 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
     public async Task Queue()
     {
         await DeferAsync();
-        if (Context.User is IGuildUser guildUser)
+        if (OnVoiceChannel(out IVoiceChannel voiceChannel))
         {
-            if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
+            if (AudioClient.channels.TryGetValue(voiceChannel.Id, out Channel channel))
             {
                 await FollowupAsync(embed: Banner.Show(channel.GetQueueString()));
             }
@@ -170,39 +187,49 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
                 await FollowupAsync(embed: Banner.Show("Очередь пуста"));
             }
         }
+        else
+        {
+            await FollowupAsync(embed: Banner.Show("Вы не в канале"));
+        }
     }
 
     [SlashCommand("nowplaying", "Показывает какая композиция играет в данный момент")]
     public async Task NowPlaying()
     {
-        if (Context.User is IGuildUser guildUser)
+        await DeferAsync();
+        if (OnVoiceChannel(out IVoiceChannel voiceChannel))
         {
-            if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
+            if (AudioClient.channels.TryGetValue(voiceChannel.Id, out Channel channel))
             {
                 YoutubeInfo? youtubeInfo = channel.GetCurrentAudio();
                 if (youtubeInfo is not null)
                 {
-                    await RespondAsync(embed: Banner.Show(youtubeInfo.Info + " Прошло: " + youtubeInfo.CurrentTime));
+                    await FollowupAsync(embed: Banner.Show(youtubeInfo.Info + " Прошло: " + youtubeInfo.CurrentTime));
                 }
                 else
                 {
-                    await RespondAsync(embed: Banner.Show("Сейчас ничего не играет"));
+                    await FollowupAsync(embed: Banner.Show("Сейчас ничего не играет"));
                 }
             }
             else
             {
-                await RespondAsync(embed: Banner.Show("Сейчас ничего не играет"));
+                await FollowupAsync(embed: Banner.Show("Сейчас ничего не играет"));
             }
         }
+        else
+        {
+            await FollowupAsync(embed: Banner.Show("Вы не в канале"));
+        }
+
     }
 
     [SlashCommand("skip", "Пропускает текущую композицию")]
     public async Task Skip()
     {
         await DeferAsync();
-        if (Context.User is IGuildUser guildUser)
+        if (OnVoiceChannel(out IVoiceChannel voiceChannel))
         {
-            if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
+            if (AudioClient.channels.TryGetValue(voiceChannel.Id, out Channel channel))
             {
                 YoutubeInfo? youtubeInfo = channel.GetCurrentAudio();
                 if (youtubeInfo is not null)
@@ -216,6 +243,24 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
                 }
             }
         }
+        else
+        {
+            await FollowupAsync(embed: Banner.Show("Вы не в канале"));
+        }
+    }
+
+    public bool OnVoiceChannel(out IVoiceChannel voiceChannel)
+    {
+        if (Context.User is IGuildUser guildUser)
+        {
+            if (guildUser.VoiceChannel is not null)
+            {
+                voiceChannel = guildUser.VoiceChannel;
+                return true;
+            }
+        }
+        voiceChannel = default;
+        return false;
     }
 
 }
