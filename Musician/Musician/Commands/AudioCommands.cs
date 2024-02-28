@@ -9,39 +9,54 @@ namespace Musician.Commands;
 
 public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
 {
+    const int BLOCKSIZE = 2880;
+
     async Task Play(Channel channel)
     {
         YoutubeInfo? youtubeInfo = channel.GetCurrentAudio();
         if (youtubeInfo is not null)
         {
+            youtubeInfo.Stream.Seek(0, SeekOrigin.Begin);
             await FollowupAsync(embed: Banner.Show(youtubeInfo.Info));
 
             var token = channel.CancellationTokenSource.Token;
 
-            var memoryStream = new MemoryStream();
-            await Cli.Wrap("ffmpeg")
-                .WithArguments("-hide_banner -loglevel panic -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1")
-                .WithStandardInputPipe(PipeSource.FromStream(youtubeInfo.Stream))
-                .WithStandardOutputPipe(PipeTarget.ToStream(memoryStream))
-                .ExecuteAsync();
+            using (var stream = channel.AudioClient.CreatePCMStream(AudioApplication.Mixed))
 
-
-            using (var test = channel.AudioClient.CreatePCMStream(AudioApplication.Mixed))
+            using (MemoryStream memoryStream = new())
             {
-                try
+                CommandResult command = await Cli.Wrap("ffmpeg")
+                    .WithArguments("-hide_banner -loglevel panic -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1")
+                    .WithStandardInputPipe(PipeSource.FromStream(youtubeInfo.Stream))
+                    .WithStandardOutputPipe(PipeTarget.ToStream(memoryStream))
+                    .ExecuteAsync();
+                youtubeInfo.AllStreamPos = memoryStream.Length;
+                memoryStream.Seek(youtubeInfo.CurrentStreamPos, SeekOrigin.Begin);
+                while (true)
                 {
-                    await test.WriteAsync(memoryStream.ToArray().AsMemory(0, (int)memoryStream.Length), token);
-                }
-                catch (Exception ex)
-                {
+                    youtubeInfo.CurrentStreamPos = memoryStream.Position;
+                    if (channel.IsPause)
+                    {
+                        await memoryStream.FlushAsync();
+                        return;
+                    }
+                    byte[] buffer = new byte[BLOCKSIZE];
+                    int byteCount = await memoryStream.ReadAsync(buffer.AsMemory(0, BLOCKSIZE));
 
+                    if (byteCount <= 0) break;
+
+                    try
+                    {
+                        await stream.WriteAsync(buffer.AsMemory(0, byteCount), token);
+                    }
+                    catch (Exception exception)
+                    {
+                        break;
+                    }
                 }
-                finally
-                {
-                    test.FlushAsync().Wait();
-                    channel.SongIsOver();
-                    channel.CancellationTokenSource = new CancellationTokenSource();
-                }
+                await memoryStream.FlushAsync();
+                channel.SongIsOver();
+                channel.CancellationTokenSource = new CancellationTokenSource();
             }
             if (channel.Queue.Count != 0)
             {
@@ -80,20 +95,19 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
                 channel = await AudioClient.Connect(guildUser.VoiceChannel);
                 await Play(channel, queue);
             }
-
         }
-
-
     }
 
-    [SlashCommand("stop", "Ставит на композицию на паузу")]
-    public async Task Stop()
+    [SlashCommand("pause", "Ставит на композицию на паузу")]
+    public async Task Pause()
     {
+        await DeferAsync();
         if (Context.User is IGuildUser guildUser)
         {
             if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
             {
-                channel.Stop();
+                await FollowupAsync(embed: Banner.Show("Композиция остановлена"));
+                channel.Pause();
             }
         }
     }
@@ -102,16 +116,18 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("resume", "Возобнавляет воспроизведение композиции")]
     public async Task Resume()
     {
+        await DeferAsync();
         if (Context.User is IGuildUser guildUser)
         {
             if (AudioClient.channels.TryGetValue(guildUser.VoiceChannel.Id, out Channel channel))
             {
                 channel.Resume();
+                await FollowupAsync(embed: Banner.Show("Композиция продолжена"));
+                await Play(channel);
             }
         }
     }
 
-    // 10/10
     [SlashCommand("stopall", "Удаляет все композиции из очереди и останавливает текущую")]
     public async Task StopAll()
     {
@@ -132,7 +148,6 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
         }
     }
 
-    // 10/10
     [SlashCommand("pop", "Попс")]
     public async Task Pop()
     {
@@ -140,7 +155,6 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
     }
 
 
-    // 10/10
     [SlashCommand("queue", "Отправляет очередь композиций в виде списка")]
     public async Task Queue()
     {
@@ -156,10 +170,8 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
                 await FollowupAsync(embed: Banner.Show("Очередь пуста"));
             }
         }
-
     }
 
-    // 10/10
     [SlashCommand("nowplaying", "Показывает какая композиция играет в данный момент")]
     public async Task NowPlaying()
     {
@@ -170,7 +182,7 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
                 YoutubeInfo? youtubeInfo = channel.GetCurrentAudio();
                 if (youtubeInfo is not null)
                 {
-                    await RespondAsync(embed: Banner.Show(youtubeInfo.Info));
+                    await RespondAsync(embed: Banner.Show(youtubeInfo.Info + " Прошло: " + youtubeInfo.CurrentTime));
                 }
                 else
                 {

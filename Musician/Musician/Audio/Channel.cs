@@ -8,7 +8,7 @@ public class Channel(IAudioClient audioClient)
 {
     public IAudioClient? AudioClient { get; set; } = audioClient;
 
-    public bool IsStop { get; set; }
+    public bool IsPause { get; set; }
 
     public CancellationTokenSource CancellationTokenSource { get; set; } = new CancellationTokenSource();
 
@@ -24,14 +24,14 @@ public class Channel(IAudioClient audioClient)
         CancellationTokenSource.Cancel();
     }
 
-    public void Stop()
+    public void Pause()
     {
-
+        IsPause = true;
     }
 
     public void Resume()
     {
-
+        IsPause = false;
     }
 
 
