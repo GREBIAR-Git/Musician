@@ -75,9 +75,9 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
         } while (channel.Queue.Count != 0);
     }
 
-    public async Task Play(Channel channel, string queue)
+    public async Task Play(Channel channel, string request)
     {
-        channel.AddAudioInQueue(queue).Wait();
+        channel.AddAudioInQueue(request).Wait();
         if (channel.Queue.Count == 1)
         {
             await Play(channel);
@@ -92,19 +92,19 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
 
 
     [SlashCommand("play", "Проигрывает композицию по запросу")]
-    public async Task Play([Summary("queue")] [Autocomplete(typeof(YouTubeAutocompleteHandler))] string queue)
+    public async Task Play([Summary("request")] [Autocomplete(typeof(YouTubeAutocompleteHandler))] string request)
     {
         await DeferAsync();
         if (OnVoiceChannel(out IVoiceChannel voiceChannel))
         {
             if (AudioClient.Channels.TryGetValue(voiceChannel.Id, out Channel channel))
             {
-                await Play(channel, queue);
+                await Play(channel, request);
             }
             else
             {
                 channel = await AudioClient.Connect(voiceChannel);
-                await Play(channel, queue);
+                await Play(channel, request);
             }
         }
         else
@@ -113,7 +113,7 @@ public class AudioCommands : InteractionModuleBase<SocketInteractionContext>
         }
     }
 
-    [SlashCommand("pause", "Ставит на композицию на паузу")]
+    [SlashCommand("pause", "Ставит композицию на паузу")]
     public async Task Pause()
     {
         await DeferAsync();
