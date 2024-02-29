@@ -29,6 +29,7 @@ public static class LogHelper
                 logger.LogCritical(msg.ToString());
                 break;
         }
+
         return Task.CompletedTask;
     }
 }

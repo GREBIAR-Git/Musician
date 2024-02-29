@@ -1,6 +1,8 @@
 ﻿using Discord.Audio;
 using YoutubeExplode;
 using YoutubeExplode.Common;
+using YoutubeExplode.Search;
+using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
 
 namespace Musician.Audio;
@@ -11,18 +13,19 @@ public class Channel(IAudioClient audioClient)
 
     public bool IsPause { get; set; }
 
-    public CancellationTokenSource CancellationTokenSource { get; set; } = new CancellationTokenSource();
+    public bool IsSkip { get; set; }
 
+    public List<YoutubeInfo> Queue { get; set; } = [];
 
     public void AllStop()
     {
         Queue.Clear();
-        CancellationTokenSource.Cancel();
+        IsSkip = true;
     }
 
     public void Skip()
     {
-        CancellationTokenSource.Cancel();
+        IsSkip = true;
     }
 
     public void Pause()
@@ -35,25 +38,22 @@ public class Channel(IAudioClient audioClient)
         IsPause = false;
     }
 
-
-    public List<YoutubeInfo> Queue { get; set; } = [];
-
     public async Task AddAudioInQueue(string request)
     {
-        var youtube = new YoutubeClient();
+        YoutubeClient youtube = new();
 
-        var videos = await youtube.Search.GetVideosAsync(request);
+        IReadOnlyList<VideoSearchResult> videos = await youtube.Search.GetVideosAsync(request);
 
         string url = videos[0].Url;
 
-        var video = await youtube.Videos.GetAsync(url);
+        Video video = await youtube.Videos.GetAsync(url);
 
-        var streamManifest = await youtube.Videos.Streams.GetManifestAsync(url);
+        StreamManifest streamManifest = await youtube.Videos.Streams.GetManifestAsync(url);
 
-        var audioStreamInfo = streamManifest.GetAudioStreams()
-               .Where(s => s.Container == Container.Mp4)
-               .GetWithHighestBitrate();
-        var stream = await youtube.Videos.Streams.GetAsync(audioStreamInfo);
+        IStreamInfo audioStreamInfo = streamManifest.GetAudioStreams()
+            .Where(s => s.Container == Container.Mp4)
+            .GetWithHighestBitrate();
+        Stream stream = await youtube.Videos.Streams.GetAsync(audioStreamInfo);
 
         Queue.Add(new YoutubeInfo(video, stream));
     }
@@ -69,7 +69,7 @@ public class Channel(IAudioClient audioClient)
 
     public YoutubeInfo? GetCurrentAudio()
     {
-        return Queue.FirstOrDefault(); ;
+        return Queue.FirstOrDefault();
     }
 
     public string GetQueueString()
@@ -79,13 +79,14 @@ public class Channel(IAudioClient audioClient)
         {
             for (int i = 0; i < Queue.Count; i++)
             {
-                queue += (i + 1) + " «" + Queue[i].Video.Title.ToString() + "» Время: " + Queue[i].Video.Duration.ToString() + "\n";
+                queue += i + 1 + " «" + Queue[i].Video.Title + "» Время: " + Queue[i].Video.Duration + "\n";
             }
         }
         else
         {
             queue = "Очередь пуста";
         }
+
         return queue;
     }
 }

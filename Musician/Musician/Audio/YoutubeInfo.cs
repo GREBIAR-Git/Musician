@@ -4,9 +4,8 @@ namespace Musician.Audio;
 
 public class YoutubeInfo(Video video, Stream stream)
 {
-    public Video Video = video;
-
     public Stream Stream = stream;
+    public Video Video = video;
 
     public long CurrentStreamPos { get; set; }
 
@@ -20,15 +19,11 @@ public class YoutubeInfo(Video video, Stream stream)
             {
                 return "0";
             }
-            return new TimeSpan(0, 0, (int)Math.Floor(CurrentStreamPos / (AllStreamPos / Video.Duration.Value.TotalSeconds))).ToString();
+
+            return new TimeSpan(0, 0,
+                (int)Math.Floor(CurrentStreamPos / (AllStreamPos / Video.Duration.Value.TotalSeconds))).ToString();
         }
     }
 
-    public string Info
-    {
-        get
-        {
-            return "Трек: " + Video.Title + "\nДлительность: " + Video.Duration;
-        }
-    }
+    public string Info => "Трек: " + Video.Title + "\nДлительность: " + Video.Duration;
 }

@@ -1,10 +1,12 @@
-﻿namespace Musician.Commands.Helper;
+﻿using Discord;
 
-internal static class Banner
+namespace Musician.Commands.Helper;
+
+static class Banner
 {
-    public static Discord.Embed Show(string title, string description = "", Discord.Color? color = null)
+    public static Embed Show(string title, string description = "", Color? color = null)
     {
-        Discord.EmbedBuilder builder = new()
+        EmbedBuilder builder = new()
         {
             Title = title,
             Description = description,

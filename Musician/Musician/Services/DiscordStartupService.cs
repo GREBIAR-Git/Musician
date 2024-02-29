@@ -10,21 +10,19 @@ namespace Musician.Services;
 
 public class DiscordStartupService : IHostedService
 {
-    private readonly DiscordSocketClient _discord;
-    private readonly IConfiguration _config;
-    private readonly ILogger<DiscordSocketClient> _logger;
+    readonly IConfiguration _config;
+    readonly DiscordSocketClient _discord;
 
-    public DiscordStartupService(DiscordSocketClient discord, IConfiguration config, ILogger<DiscordSocketClient> logger)
+    public DiscordStartupService(DiscordSocketClient discord, IConfiguration config,
+        ILogger<DiscordSocketClient> logger)
     {
-
         _discord = discord;
         _config = config;
-        _logger = logger;
 
 
         _discord.UserVoiceStateUpdated += AudioClient.UserVoiceStateUpdated;
 
-        _discord.Log += msg => LogHelper.OnLogAsync(_logger, msg);
+        _discord.Log += msg => LogHelper.OnLogAsync(logger, msg);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)

@@ -1,20 +1,22 @@
 ﻿using Discord;
 using Discord.Interactions;
 using YoutubeExplode;
+using YoutubeExplode.Search;
 
-namespace Musician.Audio
+namespace Musician.Audio;
+
+public class YouTubeAutocompleteHandler : AutocompleteHandler
 {
-    public class YouTubeAutocompleteHandler : AutocompleteHandler
+    public override Task<AutocompletionResult> GenerateSuggestionsAsync(IInteractionContext context,
+        IAutocompleteInteraction autocompleteInteraction, IParameterInfo parameter, IServiceProvider services)
     {
-        public override async Task<AutocompletionResult> GenerateSuggestionsAsync(IInteractionContext context, IAutocompleteInteraction autocompleteInteraction, IParameterInfo parameter, IServiceProvider services)
-        {
-            var input = autocompleteInteraction.Data.Current.Value as string;
-            var youtube = new YoutubeClient();
-            var videos = youtube.Search.GetVideosAsync(input);
+        string? input = autocompleteInteraction.Data.Current.Value as string;
+        YoutubeClient youtube = new();
+        IAsyncEnumerable<VideoSearchResult> videos = youtube.Search.GetVideosAsync(input);
 
-            var autocompleteResults = videos.Take(5).Select(video => new AutocompleteResult(video.Title, video.Url));
+        IAsyncEnumerable<AutocompleteResult> autocompleteResults =
+            videos.Take(5).Select(video => new AutocompleteResult(video.Title, video.Url));
 
-            return AutocompletionResult.FromSuccess(autocompleteResults.ToEnumerable());
-        }
+        return Task.FromResult(AutocompletionResult.FromSuccess(autocompleteResults.ToEnumerable()));
     }
 }

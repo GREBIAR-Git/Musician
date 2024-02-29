@@ -6,16 +6,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Musician.Services;
 
-var discordSocketConfig = new DiscordSocketConfig()
+DiscordSocketConfig discordSocketConfig = new()
 {
-    GatewayIntents = GatewayIntents.All & ~GatewayIntents.GuildPresences & ~GatewayIntents.GuildScheduledEvents & ~GatewayIntents.GuildInvites
+    GatewayIntents = GatewayIntents.All & ~GatewayIntents.GuildPresences & ~GatewayIntents.GuildScheduledEvents &
+                     ~GatewayIntents.GuildInvites
 };
 
 using IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration(config =>
-    {
-        config.AddYamlFile("_config.yml", false);
-    })
+    .ConfigureAppConfiguration(config => { config.AddYamlFile("_config.yml", false); })
     .ConfigureServices(services =>
     {
         services.AddSingleton(new DiscordSocketClient(discordSocketConfig));

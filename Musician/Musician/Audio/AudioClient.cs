@@ -6,25 +6,27 @@ namespace Musician.Audio;
 
 public static class AudioClient
 {
-    public readonly static Dictionary<ulong, Channel> channels = [];
+    public static readonly Dictionary<ulong, Channel> Channels = [];
 
-    public static async Task UserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
+    public static Task UserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState,
+        SocketVoiceState newState)
     {
         if (user.IsBot)
         {
-
             if (oldState.VoiceChannel != null && newState.VoiceChannel == null)
             {
-                channels.Remove(oldState.VoiceChannel.Id);
+                Channels.Remove(oldState.VoiceChannel.Id);
             }
         }
+
+        return Task.CompletedTask;
     }
 
     public static async Task<Channel> Connect(IVoiceChannel voiceChannel)
     {
-        IAudioClient audioClient = await voiceChannel.ConnectAsync(true, false, false);
+        IAudioClient audioClient = await voiceChannel.ConnectAsync(true);
         Channel channel = new(audioClient);
-        channels.Add(voiceChannel.Id, channel);
+        Channels.Add(voiceChannel.Id, channel);
         return channel;
     }
 }

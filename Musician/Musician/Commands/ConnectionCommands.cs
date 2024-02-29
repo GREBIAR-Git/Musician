@@ -15,7 +15,7 @@ public class ConnectionCommands : InteractionModuleBase<SocketInteractionContext
             IVoiceChannel voiceChannel = guildUser.VoiceChannel;
             if (voiceChannel is not null)
             {
-                if (!AudioClient.channels.ContainsKey(voiceChannel.Id))
+                if (!AudioClient.Channels.ContainsKey(voiceChannel.Id))
                 {
                     await RespondAsync(embed: Banner.Show("Захожу в канал «" + voiceChannel.Name + "»"));
                     await AudioClient.Connect(voiceChannel);
@@ -40,11 +40,11 @@ public class ConnectionCommands : InteractionModuleBase<SocketInteractionContext
             IVoiceChannel voiceChannel = guildUser.VoiceChannel;
             if (voiceChannel is not null)
             {
-                if (AudioClient.channels.ContainsKey(voiceChannel.Id))
+                if (AudioClient.Channels.ContainsKey(voiceChannel.Id))
                 {
                     await RespondAsync(embed: Banner.Show("Выхожу из канала «" + voiceChannel.Name + "»"));
                     await voiceChannel.DisconnectAsync();
-                    AudioClient.channels.Remove(voiceChannel.Id);
+                    AudioClient.Channels.Remove(voiceChannel.Id);
                 }
                 else
                 {
